@@ -27,9 +27,11 @@ class UserFragment : Fragment() {
     var uid: String? = null
     var auth: FirebaseAuth? = null
     var currentUserUid: String? = null
+
     companion object {
         var PICK_PROFILE_FROM_ALBUM = 10
     }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -70,7 +72,20 @@ class UserFragment : Fragment() {
             photoPickerIntent.type = "image/*"
             activity?.startActivityForResult(photoPickerIntent, PICK_PROFILE_FROM_ALBUM)
         }
+        getProfileImage()
         return fragmentView
+    }
+
+    fun getProfileImage() {
+        firestore?.collection("profileImages")?.document(uid!!)
+            ?.addSnapshotListener { documentSnapshot, firebaseFirestoreException ->
+                if (documentSnapshot == null) return@addSnapshotListener
+                if (documentSnapshot.data != null) {
+                    var url = documentSnapshot?.data!!["image"]
+                    Glide.with(activity!!).load(url).apply(RequestOptions().circleCrop())
+                        .into(fragmentView?.account_iv_profile!!)
+                }
+            }
     }
 
     inner class UserFragmentRecyclerViewAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
